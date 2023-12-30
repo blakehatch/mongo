@@ -1,0 +1,32 @@
+name: Build MongoDB
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libcurl4-openssl-dev liblzma-dev python3.9 python3-pip python3-venv libssl-dev
+
+    - name: Setup Python environment
+      run: |
+        python3 -m venv mongo_env
+        source mongo_env/bin/activate
+        python3 -m pip install 'poetry==1.5.1'
+        python3 -m poetry install --no-root --sync
+
+    - name: Build MongoDB
+      run: |
+        source mongo_env/bin/activate
+        python3 buildscripts/scons.py install-mongod --disable-warnings-as-errors -j1
